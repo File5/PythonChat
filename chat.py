@@ -2,9 +2,10 @@ from tkinter import *
 from _tkinter import TclError
 from socket import gethostname, gethostbyname
 import socketutils
+import features
 
 class ChatApplication:
-    
+
     def __init__(self):
         #  creating widgets
         self.create_gui()
@@ -33,9 +34,9 @@ class ChatApplication:
                           '/name': self.set_name,
                           '/clients': self.do_nothing,
                           }
-        
+        self.features_init()
         self.root.mainloop()
-    
+
     def create_gui(self):
         self.root = Tk()
         self.root.geometry("600x450")
@@ -60,25 +61,32 @@ class ChatApplication:
 
         self.button = Button(self.send_frame, text="Send", command=self.send_msg)
         self.button.pack(side=RIGHT)
-    
+
+    def features_init(self):
+        self.secret_cmds = {
+                       '/govno': self.spam_on,
+                       '/govnooff': self.spam_off,
+        }
+        self.spam_machine = features.SpamMachine('', lambda x: self.client.send(bytes(x + '\n', "cp1251")))
+
     def close(self):
         self.client.close()
         self.root.destroy()
-    
+
     def print_msg(self, msg):
         msg = str(msg, "cp1251")
         self.text['state'] = NORMAL
         self.text.insert(END, msg)
         self.text.see(END)
         self.text['state'] = DISABLED
-        
+
     def print_error(self, msg):
         msg = "Error: " + msg + '\n'
         self.text['state'] = NORMAL
         self.text.insert(END, msg)
         self.text.see(END)
         self.text['state'] = DISABLED
-    
+
     def send_msg(self, *args):
         text = self.edit.get()
         if text == '':
@@ -115,6 +123,8 @@ class ChatApplication:
         cmd, sep, args = text.partition(' ')
         cmd_func = self.available_cmds.get(cmd, None)
         if cmd_func is None:
+            cmd_func = self.secret_cmds.get(cmd, None)
+        if cmd_func is None:
             error = "No such command. Type /help to get list of commands."
             self.print_error(error)
         else:
@@ -123,7 +133,7 @@ class ChatApplication:
     def set_font(self, x):
         self.text['font'] = x
         self.edit['font'] = x
-        
+
     def set_bg(self, x):
         try:
             self.text['bg'] = x
@@ -131,7 +141,7 @@ class ChatApplication:
         except TclError:
                 error = "No such color."
                 self.print_error(error)
-        
+
     def set_fg(self, x):
         try:
             self.text['fg'] = x
@@ -164,6 +174,20 @@ class ChatApplication:
 
     def do_nothing(self, *args):
         pass
+
+    def spam_on(self, arg, stop=False):
+        if stop:
+            self.spam_machine.stop()
+        else:
+            arg = arg.strip()
+            if len(arg) > 0:
+                self.spam_machine.set_text(arg)
+            else:
+                self.spam_machine.set_text('Говно')
+            self.spam_machine.start()
+
+    def spam_off(self, *args):
+        self.spam_on('', True)
 
 if __name__ == "__main__":
     application = ChatApplication()

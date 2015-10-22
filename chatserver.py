@@ -28,8 +28,8 @@ class ChatServer:
         #  reading settings.ctg and setting variables
         try:
             with open('settings.cfg') as f:
-                headers = {'host': 'Server-Host: ',
-                           'port': 'Server-Port: '}
+                headers = {'host': 'Server-Host:',
+                           'port': 'Server-Port:'}
                 for line in f:
                     if line.startswith(headers['host']):
                         self.HOST = line[ len(headers['host']) : ].strip()

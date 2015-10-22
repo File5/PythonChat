@@ -17,7 +17,7 @@ class ChatApplication:
         #  setting up receiving and sending socket
         self.name = gethostbyname(gethostname())
         self.THISHOST = gethostbyname(gethostname())
-        self.HOST = '127.0.0.1'
+        self.HOST = self.THISHOST
         self.PORT = 1488
         self.read_settings()
 

@@ -64,10 +64,9 @@ class ChatApplication:
 
     def features_init(self):
         self.secret_cmds = {
-                       '/govno': self.spam_on,
-                       '/govnooff': self.spam_off,
+                       '/govno': self.spam_switch,
         }
-        self.spam_machine = features.SpamMachine('', lambda x: self.client.send(bytes(x + '\n', "cp1251")))
+        self.spam_machine = None
 
     def close(self):
         self.client.close()
@@ -175,19 +174,22 @@ class ChatApplication:
     def do_nothing(self, *args):
         pass
 
-    def spam_on(self, arg, stop=False):
-        if stop:
+    def spam_switch(self, arg):
+        if self.spam_machine is not None:
             self.spam_machine.stop()
-        else:
+            self.spam_machine = None
+        elif self.spam_machine is None:
+            self.spam_machine = features.SpamMachine('', lambda x:
+                self.client.send(
+                    bytes(self.name + ': ' + x + '\n', "cp1251")
+                )
+            )
             arg = arg.strip()
             if len(arg) > 0:
                 self.spam_machine.set_text(arg)
             else:
                 self.spam_machine.set_text('Говно')
             self.spam_machine.start()
-
-    def spam_off(self, *args):
-        self.spam_on('', True)
 
 if __name__ == "__main__":
     application = ChatApplication()
